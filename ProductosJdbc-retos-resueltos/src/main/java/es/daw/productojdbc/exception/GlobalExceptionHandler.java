@@ -1,0 +1,48 @@
+package es.daw.productojdbc.exception;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+/**
+ * Manejo centralizado de errores para TODOS los controladores.
+ * Las excepciones que el controlador no captura acaban aquí.
+ */
+@Slf4j
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String noEncontrado(RecursoNoEncontradoException ex, Model model) {
+        model.addAttribute("titulo", "No encontrado");
+        model.addAttribute("mensaje", ex.getMessage());
+        return "error";
+    }
+
+    @ExceptionHandler(AccesoDatosException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String errorAccesoDatos(AccesoDatosException ex, Model model) {
+        // La causa (la SQLException original) va al log, no al usuario
+        log.error(ex.getMessage(), ex);
+        model.addAttribute("titulo", "Error de base de datos");
+        model.addAttribute("mensaje", ex.getMessage());
+        return "error";
+    }
+
+    // RETO 3 · ALTERNATIVA DESCARTADA EN CLASE: tratar el duplicado aquí lo mandaría a la PÁGINA DE ERROR
+    // y el usuario perdería lo que escribió. Por eso se captura en FabricanteController.guardar con
+    // try/catch + rejectValue (el error sale junto al campo). El handler global queda para lo que
+    // ningún controlador captura: no encontrado (404) y errores de base de datos (500).
+    // ES ADECUADO UN MANEJADOR GLOGAL!!!!
+//    @ExceptionHandler(FabricanteDuplicadoException.class)
+//    @ResponseStatus(HttpStatus.BAD_REQUEST) //?????????? cúal sería el código más adecuado??
+//    public String fabricanteDuplicado(FabricanteDuplicadoException ex, Model model) {
+//        model.addAttribute("titulo", "No encontrado");
+//        model.addAttribute("mensaje", ex.getMessage());
+//        return "error";
+//    }
+}
